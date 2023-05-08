@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.8)
 # find . | grep .cpp
 # Delete the ./ at the beginning of each file with block selection (alt + shift in Visual Studio)
 set(PROJECT_SOURCES
-    test.cpp
+    sheldrake.cpp
 )
 
 # In UNIX, set PROJECT_HEADERS using the following command
@@ -15,5 +15,5 @@ set(PROJECT_SOURCES
 add_library (sheldrake ${PROJECT_SOURCES})
 
 # Add tests and install targets if needed.
-target_link_libraries (sheldrake drake::drake) 
-# target_include_directories(${EXECUTABLE_NAME} PUBLIC src)
+target_link_libraries (sheldrake drake::drake serial)
+target_include_directories(sheldrake PRIVATE thirdparty/serial/include/)

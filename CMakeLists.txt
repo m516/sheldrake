@@ -25,6 +25,7 @@ if(NOT WIN32)
 endif()
 
 project ("Sheldrake" C CXX)
+set (CMAKE_CXX_STANDARD 20) # We use new features like std::endian, std::float_32, ...
 
 # Set the macro/helper directory 
 set(MACRO_DIRECTORY ${CMAKE_HOME_DIRECTORY}/CMake/macros)
@@ -37,6 +38,23 @@ message("${BoldYellow}Searching for libraries...${ColorReset}")
 
 # Drake
 find_package(drake)
+
+
+# Serial
+# add_subdirectory(thirdparty/serial)
+# The Serial cmake file is not meant for this configuration,
+# so we remake our own.
+add_library (serial ${PROJECT_SOURCES}
+thirdparty/serial/include/serial/impl
+thirdparty/serial/src/impl/list_ports/list_ports_linux.cc
+thirdparty/serial/src/impl/unix.cc
+thirdparty/serial/include/serial/impl/unix.h
+thirdparty/serial/include/serial/serial.h
+thirdparty/serial/include/serial/v8stdint.h
+thirdparty/serial/src/serial.cc
+)
+target_link_libraries (serial rt pthreads)
+target_include_directories(serial PUBLIC thirdparty/serial/include/)
 
 
 # Google Test
