@@ -3,6 +3,11 @@
 
 cmake_minimum_required (VERSION 3.10)
 
+# Options
+option(BUILD_TESTS "Build all projects in the 'test' folder" ON)
+option(BUILD_EXAMPLES "Build all projects in the 'examples' folder" ON)
+
+
 # Define colors
 if(NOT WIN32)
   string(ASCII 27 Esc)
@@ -40,6 +45,11 @@ message("${BoldYellow}Searching for libraries...${ColorReset}")
 find_package(drake)
 
 
+
+# GFlags
+add_subdirectory(thirdparty/gflags)
+
+
 # Serial
 # add_subdirectory(thirdparty/serial)
 # The Serial cmake file is not meant for this configuration,
@@ -53,7 +63,7 @@ thirdparty/serial/include/serial/serial.h
 thirdparty/serial/include/serial/v8stdint.h
 thirdparty/serial/src/serial.cc
 )
-target_link_libraries (serial rt pthreads)
+target_link_libraries (serial rt pthread)
 target_include_directories(serial PUBLIC thirdparty/serial/include/)
 
 
@@ -70,5 +80,11 @@ include_directories("src")
 add_subdirectory ("src")
 
 # Include tests.
+if(BUILD_TESTS)
 include(CTest)
 add_subdirectory ("test")
+endif()
+
+if(BUILD_EXAMPLES)
+add_subdirectory(examples)
+endif()

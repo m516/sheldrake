@@ -1,3 +1,6 @@
 [submodule "thirdparty/serial"]
 	path = thirdparty/serial
 	url = https://github.com/wjwwood/serial.git
+[submodule "thirdparty/gflags"]
+	path = thirdparty/gflags
+	url = https://github.com/gflags/gflags.git

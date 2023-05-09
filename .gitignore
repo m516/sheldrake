@@ -1,3 +1,5 @@
 /.vscode
 /Makefile
 /build
+/docs
+Makefile
