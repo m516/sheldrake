@@ -23,7 +23,7 @@ cmake ..
 make
 ```
 
-An early prototype of a Sheldrake-enabled LQR controller on an inverted pendulum can be found (here)[https://github.com/m516/sheldrake-arduino-template/].
+An early prototype of a Sheldrake-enabled LQR controller on an inverted pendulum can be found [here](https://github.com/m516/sheldrake-arduino-template/).
 
 ## Basic Usage
 
