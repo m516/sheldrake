@@ -9,9 +9,22 @@ This is currently a proof-of-concept and only applies PID and LQR models at this
 * Minimum C++ Version: 20 (gcc 12+)
 
 ## Getting Started
-Install Drake and other necessary dependencies
+Install Drake and other necessary dependencies.
+
+Navigate to the root folder of your local Sheldrake clone and run:
 ```bash
 sh configure.sh
 ```
+Building the project and all examples is similar to most other CMake projects.
+```bash
+mkdir -p build
+cd build
+cmake ..
+make
+```
 
-## How to use it
+An early prototype of a Sheldrake-enabled LQR controller on an inverted pendulum can be found (here)[https://github.com/m516/sheldrake-arduino-template/].
+
+## Basic Usage
+
+TODO: documentation
