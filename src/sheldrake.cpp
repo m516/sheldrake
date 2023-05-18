@@ -46,8 +46,6 @@ The Sheldrake object is a clean wrapper for these utilities, so library users do
 
 namespace sheldrake{
 
-
-
 // Define the egg_floating_point_type
 #ifdef USE_STDFLOAT
 using egg_floating_point_type=std::float32_t;
@@ -80,10 +78,13 @@ struct Egg{
     const char prefix='s';
 
     // The type of control policy
-    // 0: NULL (invalid egg)
-    // 1: PID
-    // 2: FullStateFeedback
-    uint8_t type=0;
+    enum ControlPolicyType{
+        INVALID                = 0,
+        PID                    = 1,
+        GAIN                   = 2,
+        LINEAR_TIME_INVARIANT  = 3
+    };
+    enum ControlPolicyType type;
 
     // The length of the body
     uint8_t body_length;
@@ -99,14 +100,16 @@ struct Egg{
 };
 
 
+namespace eggs{
+
+
 /// @brief Ensures an egg is valid
 /// @param egg 
 void validate(Egg &egg){
     using namespace std;
 
     // Type
-    if(egg.type==0) throw runtime_error("Egg type hasn't been defined");
-    if(egg.type>2)  throw runtime_error("Invalid egg type");
+    if(egg.type==egg.INVALID) throw runtime_error("Egg type hasn't been defined");
 
     // Body length
     if(egg.body.size()>255) throw runtime_error("Egg size too large (exceeds maximum of 255 bytes)");
@@ -118,7 +121,10 @@ void validate(Egg &egg){
 }
 
 
-std::vector<uint8_t> serialize(Egg &egg){
+std::vector<uint8_t> serialize(const Egg &egg_arg){
+
+    // Make a mutable validated copy of the egg
+    Egg egg = egg_arg;
     validate(egg);
 
     std::vector<uint8_t> body;
@@ -181,7 +187,7 @@ void append_float(egg_body_type &body, egg_floating_point_type value){
 
 // PID controller
 template<typename T> 
-Egg generate_egg_PID(const drake::systems::controllers::PidController<T> &controller){
+Egg generate_egg(const drake::systems::controllers::PidController<T> &controller){
     /*
     PID eggs follow this structure:
         - uint8_t  n    (not necessary because Eggs also contain their size)
@@ -194,7 +200,7 @@ Egg generate_egg_PID(const drake::systems::controllers::PidController<T> &contro
     Egg egg;
 
     // Sanity checks
-    if(controller.get_Kd_vector().size()>255) throw runtime_error("blabla");
+    if(controller.get_Kd_vector().size()>255) throw runtime_error("Large PID controllers (>255 dimensions) are not supported yet");
     uint8_t size = controller.get_Kd_vector().size();
 
     // Set the egg type to "PID"
@@ -206,12 +212,56 @@ Egg generate_egg_PID(const drake::systems::controllers::PidController<T> &contro
     for(auto i: controller.get_Ki_vector) append_float(egg.body, i); // K_i
     for(auto i: controller.get_Kd_vector) append_float(egg.body, i); // K_d
 
-    // validate() can handle the rest
+    // validate() can handle the rest. If an exception is thrown here, Sheldrake has a problem.
+    eggs::validate(egg);
 
     return egg;
 }
 
 
+
+
+// Affine systems (TODO)
+template<typename T> 
+Egg generate_egg(const drake::systems::AffineSystem<T> &controller){
+    // Affine systems follow this structure:
+    //     X_dot = A * X + B * U
+    //     Y     = C * X + D * U
+    // Where X is an n-dimensional vector, U is an m-dimensional vector, and Y is a p-dimensional vector.
+
+    /*
+    Affine eggs follow this structure:
+        - uint8_t  n
+        - uint8_t  m
+        - uint8_t  p
+        - float[]  A  (an n*n-dimensional vector)
+        - float[]  B  (an n*m-dimensional vector)
+        - float[]  C  (a p*n-dimensional vector)
+        - float[]  D  (a p*m-dimensional vector)
+    */ 
+    using namespace std;
+
+    Egg egg;
+
+    // TODO stub
+
+    return egg;
+} // end generate_egg_PID
+
+
+/// @brief Generates an Egg from a Drake controller
+/// @tparam T one of the Drake controller types listed in the documentation for deploy()
+/// @param t 
+template<typename T>
+void _ensure_valid_controller_type(const T& t){
+    constexpr bool can_make_egg = requires(const T& t) {
+        generate_egg(t);
+    };
+    static_assert(can_make_egg, "This type of controller cannot be converted to an Egg");
+} // end _ensure_valid_controller_type
+
+
+} // end namespace eggs
 
 
 
@@ -253,10 +303,10 @@ Egg generate_egg_PID(const drake::systems::controllers::PidController<T> &contro
 
 */
 
-/// @brief Deploys an Egg to an embedded system using a USB serial interface
-/// @param serial an open connection to an embedded system
-/// @param egg the Egg to deploy
-void deploy_serial(serial::Serial &serial, Egg &egg){
+
+
+void Sheldrake_Serial::_deploy_egg(const Egg &egg){
+   
     using namespace std;
 
     // If float32_t is not defined, check if the egg_floating_point_type
@@ -272,19 +322,13 @@ void deploy_serial(serial::Serial &serial, Egg &egg){
     static_assert(sizeof(egg_floating_point_type) == 4, "Eggs require 32-bit floating-point numbers, but egg_floating_point_type is not 4 bytes.");
 
     // Ensure this is still an open connection
-    if(!serial.isOpen()) throw runtime_error("Attempted to use a serial port while calling deploy_serial, but the serial port was not open");
+    if(!serial->isOpen()) throw runtime_error("Attempted to use a serial port while calling deploy_serial, but the serial port was not open");
 
     // Deploy the egg
-    std::vector<uint8_t> serialized_egg = serialize(egg);
-    serial.write(serialized_egg);
-}
-
-
-
-
-
-
-
+    
+    std::vector<uint8_t> serialized_egg = eggs::serialize(egg);
+    serial->write(serialized_egg);
+} // end Sheldrake_Serial::_deploy_egg
 
 
 
@@ -306,20 +350,19 @@ void deploy_serial(serial::Serial &serial, Egg &egg){
                                                                                     |___/ 
 */
 
-
 template<typename T>
-void Sheldrake::deploy(const drake::systems::controllers::PidController<T> &controller){
+void Sheldrake::deploy(const T &controller)
+{
+
+    // Ensure this is a valid controller type
+    _ensure_valid_controller_type(controller);
 
     // Create an Egg from this controller
-    Egg egg = generate_egg_PID(controller);
+    Egg egg = eggs::generate_egg(controller);
 
+    // Now deploy the egg
+    _deploy_egg(egg);
 
-    // Deploy based on communication type
-    switch(com_type){
-        case Serial:
-        deploy_serial(*comserial, egg);
-        break;
-    }
 } // end Sheldrake::deploy
 
 
@@ -328,4 +371,5 @@ void Sheldrake::deploy(const drake::systems::controllers::PidController<T> &cont
 
 
 
-}
+
+} // end namespace sheldrake
