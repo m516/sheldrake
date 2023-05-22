@@ -44,10 +44,11 @@ message("${BoldYellow}Searching for libraries...${ColorReset}")
 # Drake
 find_package(drake)
 
-
-
 # GFlags
 add_subdirectory(thirdparty/gflags)
+
+# TinyMatrixMath
+add_subdirectory(thirdparty/TinyMatrixMath)
 
 
 # Serial
