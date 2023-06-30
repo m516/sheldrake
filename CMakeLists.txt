@@ -107,5 +107,5 @@ add_subdirectory ("test")
 endif()
 
 if(BUILD_EXAMPLES)
-add_subdirectory(examples)
+add_subdirectory(cmake_examples)
 endif()
