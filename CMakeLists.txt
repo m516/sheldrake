@@ -38,11 +38,21 @@ message("${BoldMagenta}CMake utility directory: ${MACRO_DIRECTORY}${ColorReset}"
 # Add some macros
 include(${MACRO_DIRECTORY}/libhelpers.cmake)
 
+
+#########################   Libraries   #########################
+
+
 # Find packages used throughout this repository
 message("${BoldYellow}Searching for libraries...${ColorReset}")
 
 # Drake
 find_package(drake)
+if(drake_FOUND)
+  message("${Green}Drake found. Including Drake integrations.${ColorReset}")
+  add_compile_definitions(USING_DRAKE_LIBRARY=1)
+else()
+  message("${BoldRed}Drake not found. Not including Drake integration in this build.${ColorReset}")
+endif()
 
 # GFlags
 add_subdirectory(thirdparty/gflags)
@@ -68,17 +78,27 @@ target_link_libraries (serial rt pthread)
 target_include_directories(serial PUBLIC thirdparty/serial/include/)
 
 
-# Google Test
-# message("${BoldYellow}Using local copy of the Google Test framework${ColorReset}")
-# add_subdirectory(thirdparty/googletest)
-# set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-
 message("${BoldYellow}Library search complete!${ColorReset}")
 
-# Include sub-projects.
-include_directories("src")
-add_subdirectory ("src")
+
+#########################   Project   #########################
+
+
+set(PROJECT_SOURCES
+    src/sheldrake.cpp
+    include/sheldrake.hpp
+)
+add_library (sheldrake ${PROJECT_SOURCES})
+target_link_libraries (sheldrake tinycontrolpolicies serializer)
+if(drake_FOUND)
+  target_link_libraries (sheldrake drake::drake)
+endif()
+target_include_directories(sheldrake PRIVATE thirdparty/serial/include/)
+target_include_directories(sheldrake PUBLIC include/)
+
+
+#########################   Tests   #########################
+
 
 # Include tests.
 if(BUILD_TESTS)

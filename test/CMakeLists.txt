@@ -11,6 +11,8 @@ enable_testing()
 add_executable(
   Sheldrake_tests
   basic_tests.cc
+  closed_loop.cc
+  drake.cc
 )
 target_link_libraries(
   Sheldrake_tests
@@ -19,4 +21,4 @@ target_link_libraries(
 )
 
 include(GoogleTest)
-gtest_discover_tests(basic_tests)
+gtest_discover_tests(Sheldrake_tests)
