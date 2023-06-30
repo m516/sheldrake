@@ -65,17 +65,17 @@ add_subdirectory(thirdparty/TinyMatrixMath)
 # add_subdirectory(thirdparty/serial)
 # The Serial cmake file is not meant for this configuration,
 # so we remake our own.
-add_library (serial ${PROJECT_SOURCES}
-thirdparty/serial/include/serial/impl
-thirdparty/serial/src/impl/list_ports/list_ports_linux.cc
-thirdparty/serial/src/impl/unix.cc
-thirdparty/serial/include/serial/impl/unix.h
-thirdparty/serial/include/serial/serial.h
-thirdparty/serial/include/serial/v8stdint.h
-thirdparty/serial/src/serial.cc
-)
-target_link_libraries (serial rt pthread)
-target_include_directories(serial PUBLIC thirdparty/serial/include/)
+# add_library (serial ${PROJECT_SOURCES}
+# thirdparty/serial/include/serial/impl
+# thirdparty/serial/src/impl/list_ports/list_ports_linux.cc
+# thirdparty/serial/src/impl/unix.cc
+# thirdparty/serial/include/serial/impl/unix.h
+# thirdparty/serial/include/serial/serial.h
+# thirdparty/serial/include/serial/v8stdint.h
+# thirdparty/serial/src/serial.cc
+# )
+# target_link_libraries (serial rt pthread)
+# target_include_directories(serial PUBLIC thirdparty/serial/include/)
 
 
 message("${BoldYellow}Library search complete!${ColorReset}")
