@@ -4,3 +4,9 @@
 [submodule "thirdparty/TinyMatrixMath"]
 	path = thirdparty/TinyMatrixMath
 	url = https://github.com/m516/TinyMatrixMath.git
+[submodule "thirdparty/TinyControlPolicies"]
+	path = thirdparty/TinyControlPolicies
+	url = https://github.com/m516/TinyControlPolicies.git
+[submodule "thirdparty/TinySerializer"]
+	path = thirdparty/TinySerializer
+	url = https://github.com/m516/TinySerializer.git
